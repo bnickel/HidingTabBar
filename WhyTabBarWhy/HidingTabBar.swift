@@ -111,7 +111,8 @@ public class HidingTabBar : UITabBar {
             } else {
                 // Rendering the zero size snapshot view unfortunately results in a blank tab bar and snapshotViewAfterScreenUpdates(true) has horrifying behaviors.
                 // For the most common case, we just let the tab bar animate in place.  If for some reason we show/hide the tab bar relatively fast, we'll compensate
-                // by switching to the actual snapshot, as ugly as it may be.  This is the edge case of the edge case so I don't care to take this too much further.
+                // by switching to the actual snapshot, which should look fine unless the tab bar width has changed since it was hidden.  In that case, the bar buttons
+                // will be laid out with their original widths. This is the edge case of the edge case of the edge case so I don't care to take this too much further.
                 self.frame = finalFrame
                 animatingView = snapshotViewAfterScreenUpdates(false)
                 animateSelf = true
@@ -162,10 +163,12 @@ public class HidingTabBar : UITabBar {
     
     // The original snapshot does not include the tab bar background/border.
     override public func snapshotViewAfterScreenUpdates(afterUpdates: Bool) -> UIView {
-        let snapshotView = super.snapshotViewAfterScreenUpdates(afterUpdates)
-        snapshotView.frame.origin = CGPointZero
         let parent = HidingTabBar(frame: frame)
-        parent.addSubview(snapshotView)
+        for subview in subviews where subview.frame != bounds {
+            let snapshotView = subview.snapshotViewAfterScreenUpdates(afterUpdates)
+            snapshotView.center = subview.center
+            parent.addSubview(snapshotView)
+        }
         return parent
     }
 }
