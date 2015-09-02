@@ -20,6 +20,7 @@ public class HidingTabBar : UITabBar {
     private static var customHeight:CGFloat? = nil
     private weak var currentAnimatingView:UIView?
     private weak var currentAnimation:AnyObject?
+    private var lastAnimatedView:(UITabBarItem?, UIView)?
     
     override public func sizeThatFits(size: CGSize) -> CGSize {
         return sizeThatFits(size, hidden: hidden)
@@ -33,6 +34,15 @@ public class HidingTabBar : UITabBar {
             size.height = customHeight
         }
         return size
+    }
+    
+    // If UITabBarItem is laid out when height == 0, the UITabBarLabel width gets reduced by 10pt permanently.
+    // It appears that the rendering gets cached so even resizing the label to its original width after animation DOES NOT WORK.
+    // This is sufficiently effective.
+    override public func layoutSubviews() {
+        if bounds.height != 0 {
+            super.layoutSubviews()
+        }
     }
     
     override public var hidden:Bool {
@@ -81,25 +91,34 @@ public class HidingTabBar : UITabBar {
         // We reuse the existing animating view for smooth animations when setting multiple times.
         let animatingView:UIView
         let alreadyAnimating:Bool
+        let animateSelf:Bool
         
         if let currentAnimatingView = currentAnimatingView {
             animatingView = currentAnimatingView
             alreadyAnimating = true
+            animateSelf = false
         } else {
             alreadyAnimating = false
-            if hidden {
+            
+            if let (selectedItem, view) = self.lastAnimatedView where selectedItem == selectedItem && view.frame.size == finalFrame.size {
+                // If possible, we reuse the last animated view.  This is the best way to get an accurate snapshot of the current view.  It misses
+                // the case where the orientation has changed since the view was hidden.
+                animatingView = view
+                animateSelf = false
+            } else if hidden {
                 animatingView = snapshotViewAfterScreenUpdates(false)
+                animateSelf = false
             } else {
-                // We move the view offscreen to avoid a flicker. I don't know why it happens, it just does.
-                var frame = finalFrame
-                frame.origin.y = initialFrame.minY
-                self.frame = frame
-                super.hidden = false
-                animatingView = snapshotViewAfterScreenUpdates(true)
+                // Rendering the zero size snapshot view unfortunately results in a blank tab bar and snapshotViewAfterScreenUpdates(true) has horrifying behaviors.
+                // For the most common case, we just let the tab bar animate in place.  If for some reason we show/hide the tab bar relatively fast, we'll compensate
+                // by switching to the actual snapshot, as ugly as it may be.  This is the edge case of the edge case so I don't care to take this too much further.
+                self.frame = finalFrame
+                animatingView = snapshotViewAfterScreenUpdates(false)
+                animateSelf = true
             }
         }
         
-        self.alpha = 0
+        self.lastAnimatedView = (selectedItem, animatingView)
         self.frame = finalFrame
         super.hidden = hidden
         
@@ -110,12 +129,24 @@ public class HidingTabBar : UITabBar {
             currentAnimatingView = animatingView
         }
         
+        if animateSelf {
+            self.alpha = 1
+            animatingView.alpha = 0
+            self.frame = animatingView.frame
+        } else {
+            self.alpha = 0
+            animatingView.alpha = 1
+        }
+        
         // This is a quick but reliable way to check if the animation was interrupted by a new one.
         let currentAnimation = NSObject()
         self.currentAnimation = currentAnimation
         
         UIView.animateWithDuration(NSTimeInterval(UINavigationControllerHideShowBarDuration), animations: { () -> Void in
             animatingView.frame.origin.y = finalFrame.minY
+            if animateSelf {
+                self.frame.origin.y = finalFrame.minY
+            }
             alongsideAnimations()
             NSNotificationCenter.defaultCenter().postNotificationName(HidingTabBarVisibilityAnimatingNotification, object: self, userInfo: userInfo)
         }, completion: { (finished) -> Void in
