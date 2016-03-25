@@ -26,8 +26,8 @@ public class HidingTabBar : UITabBar {
         return sizeThatFits(size, hidden: hidden)
     }
     
-    private func sizeThatFits(var size: CGSize, hidden:Bool) -> CGSize {
-        size = super.sizeThatFits(size)
+    private func sizeThatFits(size: CGSize, hidden:Bool) -> CGSize {
+        var size = super.sizeThatFits(size)
         if hidden {
             size.height = 0
         } else if let customHeight = HidingTabBar.customHeight {

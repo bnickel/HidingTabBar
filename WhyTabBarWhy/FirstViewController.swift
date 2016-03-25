@@ -14,7 +14,7 @@ class FirstViewController: UIViewController, UINavigationControllerDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: "tabBarVisibilityChanging:", name: HidingTabBarVisibilityAnimatingNotification, object: nil)
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(FirstViewController.tabBarVisibilityChanging(_:)), name: HidingTabBarVisibilityAnimatingNotification, object: nil)
     }
     
     override func viewDidAppear(animated: Bool) {
