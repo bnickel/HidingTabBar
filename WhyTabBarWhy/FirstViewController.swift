@@ -8,7 +8,7 @@
 
 import UIKit
 
-class FirstViewController: UIViewController, UINavigationControllerDelegate {
+class FirstViewController: UIViewController {
     
     @IBOutlet weak var sceneNameLabel: UILabel!
 
@@ -30,10 +30,14 @@ class FirstViewController: UIViewController, UINavigationControllerDelegate {
         tabBarController!.setTabBarHidden(!tabBarController!.tabBarHidden, animated: true)
     }
     
+}
+
+extension FirstViewController: UINavigationControllerDelegate {
+    
     func navigationController(navigationController: UINavigationController, didShowViewController viewController: UIViewController, animated: Bool) {
-        
         tabBarController?.setTabBarHidden(navigationController.viewControllers.count > 1, animated: true)
     }
+    
 }
 
 class CustomTableView: UITableView {

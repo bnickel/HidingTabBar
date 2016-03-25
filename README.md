@@ -1,19 +1,18 @@
 # HidingTabBar
 
-A UITabBar subclass you can hide.  I may package eventually but I've got to ship my app first.  
-No guarantees that anything good can come from using this.  Tested only in iOS9 simulator.
+A UITabBar subclass you can hide.  Yes, you can use `ViewController.hidesBottomBarWhenPushed`, and I did for a very long time, but I needed more fine-grained control for adaptive layout on iPads.
 
 ## Demo
 
-Open and run the project in Xcode 7. [Slowmo Video](https://www.youtube.com/watch?v=LHrEn0QSw78)
+Open and run the project in Xcode 7.3+ *(thanks swift)*. [Slowmo Video](https://www.youtube.com/watch?v=LHrEn0QSw78). [Released app](https://itunes.apple.com/us/app/stack-exchange/id871299723?mt=8).
 
 ## Instructions
 
 1. Drop HidingTabBar.swift into your app.
-2. In your storyboard/xib, set your UITabBarController's custom class to HidingTabBar.
+2. In your storyboard, set your UITabBarController's tab bar's class to HidingTabBar.  There is literally no way to do this in code or a regular xib.
 3. Call `UITabBarController.setTabBarHidden(_:animated:)`, preferably when nothing else it animating.
-   I like to do it in a `UINavigationControllerDelegate`.
+   I like to do it in a [`UINavigationControllerDelegate`](WhyTabBarWhy/FirstViewController.swift).
 
 ## Warnings
 
-I made this today.  It makes some (possibly wrong) assumptions.
+Lots of assumptions. Zero tests.
