@@ -42,6 +42,11 @@ public class HidingTabBar : UITabBar {
     override public func layoutSubviews() {
         if bounds.height != 0 {
             super.layoutSubviews()
+            
+            // Fix the background view if its height gets stuck at zero.  Only seen so far on a 4S once.  Not sure how to reproduce: 
+            if let background = subviews.first where background.frame.width == bounds.width {
+                background.frame = bounds
+            }
         }
     }
     
